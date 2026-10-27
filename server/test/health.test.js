@@ -12,15 +12,18 @@ function fakePool(works) {
   };
 }
 
+const config = { isProduction: false, sessionSecret: 'test-hemmelighed-der-er-mindst-32-tegn-lang' };
+const appWith = (works) => createApp({ pool: fakePool(works), config, pruneSessions: false });
+
 describe('GET /api/health', () => {
   it('svarer ok, når databasen svarer', async () => {
-    const res = await request(createApp({ pool: fakePool(true) })).get('/api/health');
+    const res = await request(appWith(true)).get('/api/health');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ ok: true, database: true });
   });
 
   it('svarer 503, når databasen ikke kan nås', async () => {
-    const res = await request(createApp({ pool: fakePool(false) })).get('/api/health');
+    const res = await request(appWith(false)).get('/api/health');
     expect(res.status).toBe(503);
     expect(res.body).toEqual({ ok: false, database: false });
   });

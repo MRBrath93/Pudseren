@@ -1,13 +1,40 @@
 import express from 'express';
+import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
+import { ZodError } from 'zod';
+import { requireJson } from './middleware/auth.js';
+import { authRouter } from './routes/auth.js';
 
 // Opretter selve Express-appen. Den er adskilt fra index.js,
-// så testene senere kan bruge appen uden at starte en rigtig server.
-// Databasen (pool) sendes ind udefra, så testene kan bruge en testdatabase.
-export function createApp({ pool }) {
+// så testene kan bruge appen uden at starte en rigtig server.
+// Database (pool) og indstillinger (config) sendes ind udefra, så testene kan bruge en testdatabase.
+export function createApp({ pool, config, loginLimit, pruneSessions = true }) {
   const app = express();
+  const PgStore = connectPgSimple(session);
 
-  // Gør det muligt at læse JSON i forespørgsler (req.body).
+  if (config.isProduction) {
+    // Bag Nginx: stol på den første proxy, så Secure-cookies og IP-adresser virker.
+    app.set('trust proxy', 1);
+  }
+
   app.use(express.json({ limit: '100kb' }));
+  app.use(
+    session({
+      name: 'pudseren.sid',
+      store: new PgStore({ pool, tableName: 'session', pruneSessionInterval: pruneSessions ? 15 * 60 : false }),
+      secret: config.sessionSecret,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true, // JavaScript i browseren kan ikke læse cookien (beskytter mod XSS)
+        sameSite: 'strict', // sendes ikke med fra andre hjemmesider (beskytter mod CSRF)
+        secure: config.isProduction, // kun over HTTPS i produktion
+        maxAge: 12 * 60 * 60 * 1000, // 12 timer – en arbejdsdag
+      },
+    }),
+  );
+
+  app.use('/api', requireJson);
 
   // Tjek af, om serveren kører og kan nå databasen. Bruges også ved deployment.
   app.get('/api/health', async (req, res) => {
@@ -17,6 +44,28 @@ export function createApp({ pool }) {
     } catch {
       res.status(503).json({ ok: false, database: false });
     }
+  });
+
+  app.use('/api/auth', authRouter({ pool, loginLimit }));
+
+  app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'Findes ikke.' });
+  });
+
+  // Fejl: valideringsfejl bliver til 400, alt andet til en generel 500 uden tekniske detaljer.
+  app.use((error, req, res, next) => {
+    if (error instanceof ZodError) {
+      const fields = [];
+      for (const issue of error.issues) {
+        fields.push({ field: issue.path.join('.'), message: issue.message });
+      }
+      return res.status(400).json({ error: 'Ugyldige oplysninger.', fields });
+    }
+    if (error.type === 'entity.parse.failed') {
+      return res.status(400).json({ error: 'Ugyldig JSON.' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Der skete en fejl på serveren.' });
   });
 
   return app;
