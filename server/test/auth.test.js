@@ -8,7 +8,7 @@ import { hashPassword } from '../src/lib/password.js';
 import { migrate } from '../scripts/migrate.js';
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
-const config = { isProduction: false, sessionSecret: 'test-hemmelighed-der-er-mindst-32-tegn-lang' };
+import { testConfig as config } from './helpers.js';
 const PASSWORD = 'en lang test-adgangskode';
 
 describe.skipIf(!databaseUrl)('login', () => {

@@ -20,5 +20,6 @@ export function loadConfig() {
     isProduction: process.env.NODE_ENV === 'production',
     databaseUrl: required('DATABASE_URL'),
     sessionSecret,
+    encryptionKey: required('ENCRYPTION_KEY'),
   };
 }
