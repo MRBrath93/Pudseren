@@ -8,7 +8,7 @@ const routes = [
   { path: '/', component: { render: () => null } },
   { path: '/skal-pudses', component: () => import('../views/ChefHomeView.vue'), meta: { roles: ['chef'] } },
   { path: '/dagens-rute', component: () => import('../views/WorkerHomeView.vue'), meta: { roles: ['medarbejder'] } },
-  { path: '/to-faktor', component: () => import('../views/TwoFactorPendingView.vue'), meta: { roles: ['chef', 'medarbejder'] } },
+  { path: '/to-faktor', component: () => import('../views/TwoFactorSetupView.vue'), meta: { roles: ['chef', 'medarbejder'] } },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ];
 
