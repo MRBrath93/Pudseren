@@ -1,6 +1,7 @@
 import express from 'express';
 import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
+import helmet from 'helmet';
 import { ZodError } from 'zod';
 import { requireJson } from './middleware/auth.js';
 import { authRouter } from './routes/auth.js';
@@ -16,6 +17,18 @@ export function createApp({ pool, config, loginLimit, pruneSessions = true }) {
     // Bag Nginx: stol på den første proxy, så Secure-cookies og IP-adresser virker.
     app.set('trust proxy', 1);
   }
+
+  // Sikkerheds-headers. Fjerner bl.a. X-Powered-By, forhindrer at siden vises i en ramme
+  // på en fremmed side (clickjacking) og begrænser, hvilke scripts browseren må køre (CSP).
+  // HTTPS-tvang (HSTS) slås kun til i produktion, så localhost virker over http.
+  app.use(
+    helmet({
+      strictTransportSecurity: config.isProduction,
+      contentSecurityPolicy: {
+        directives: { upgradeInsecureRequests: config.isProduction ? [] : null },
+      },
+    }),
+  );
 
   app.use(express.json({ limit: '100kb' }));
   app.use(
