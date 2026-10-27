@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
+import { testConfig as config } from './helpers.js';
 
 // En falsk database, så vi kan teste begge udfald uden en rigtig forbindelse.
 function fakePool(works) {
@@ -12,7 +13,6 @@ function fakePool(works) {
   };
 }
 
-const config = { isProduction: false, sessionSecret: 'test-hemmelighed-der-er-mindst-32-tegn-lang' };
 const appWith = (works) => createApp({ pool: fakePool(works), config, pruneSessions: false });
 
 describe('GET /api/health', () => {

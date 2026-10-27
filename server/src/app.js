@@ -5,12 +5,15 @@ import helmet from 'helmet';
 import { ZodError } from 'zod';
 import { requireJson } from './middleware/auth.js';
 import { authRouter } from './routes/auth.js';
+import { twoFactorRouter } from './routes/twoFactor.js';
+import { createEncryption } from './lib/encryption.js';
 
 // Opretter selve Express-appen. Den er adskilt fra index.js,
 // så testene kan bruge appen uden at starte en rigtig server.
 // Database (pool) og indstillinger (config) sendes ind udefra, så testene kan bruge en testdatabase.
-export function createApp({ pool, config, loginLimit, pruneSessions = true }) {
+export function createApp({ pool, config, loginLimit, codeLimit, pruneSessions = true }) {
   const app = express();
+  const encryption = createEncryption(config.encryptionKey);
   const PgStore = connectPgSimple(session);
 
   if (config.isProduction) {
@@ -59,6 +62,7 @@ export function createApp({ pool, config, loginLimit, pruneSessions = true }) {
     }
   });
 
+  app.use('/api/auth/2fa', twoFactorRouter({ pool, encryption, codeLimit }));
   app.use('/api/auth', authRouter({ pool, loginLimit }));
 
   app.use('/api', (req, res) => {
