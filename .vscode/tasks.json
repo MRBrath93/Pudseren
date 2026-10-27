@@ -29,6 +29,16 @@
       "presentation": { "panel": "dedicated", "reveal": "always", "group": "udvikling" }
     },
     {
+      "label": "Klient",
+      "detail": "Vue-appen på http://localhost:5173",
+      "type": "shell",
+      "command": "npm run dev:client",
+      "isBackground": true,
+      "problemMatcher": [],
+      "icon": { "id": "browser", "color": "terminal.ansiBlue" },
+      "presentation": { "panel": "dedicated", "reveal": "silent", "group": "udvikling" }
+    },
+    {
       "label": "SSH server",
       "detail": "Logget ind på produktionsserveren (ssh pudseren). Pas på – det er den rigtige server.",
       "type": "shell",
@@ -50,8 +60,8 @@
     },
     {
       "label": "Start udvikling",
-      "detail": "Starter tunnel, server, git-terminal og SSH til serveren",
-      "dependsOn": ["Tunnel", "Server", "SSH server", "Git"],
+      "detail": "Starter tunnel, server, klient, SSH til serveren og git-terminal",
+      "dependsOn": ["Tunnel", "Server", "Klient", "SSH server", "Git"],
       "problemMatcher": [],
       "icon": { "id": "rocket", "color": "terminal.ansiBlue" },
       "runOptions": { "runOn": "folderOpen" }
