@@ -1,10 +1,11 @@
 import { createApp } from './app.js';
+import { loadConfig } from './config.js';
 import { createPool } from './db.js';
 
-const port = Number(process.env.PORT ?? 3000);
-const pool = createPool(process.env.DATABASE_URL);
-const app = createApp({ pool });
+const config = loadConfig();
+const pool = createPool(config.databaseUrl);
+const app = createApp({ pool, config });
 
-app.listen(port, () => {
-  console.log(`Serveren kører på http://localhost:${port}`);
+app.listen(config.port, () => {
+  console.log(`Serveren kører på http://localhost:${config.port}`);
 });
