@@ -62,8 +62,10 @@ export function createApp({ pool, config, loginLimit, codeLimit, pruneSessions =
     }
   });
 
+  // Rækkefølgen betyder noget: /api/auth/2fa/verify skal nås uden at være logget ind,
+  // så auth-routeren skal før to-faktor-routeren, der kræver login.
+  app.use('/api/auth', authRouter({ pool, encryption, loginLimit, codeLimit }));
   app.use('/api/auth/2fa', twoFactorRouter({ pool, encryption, codeLimit }));
-  app.use('/api/auth', authRouter({ pool, loginLimit }));
 
   app.use('/api', (req, res) => {
     res.status(404).json({ error: 'Findes ikke.' });
