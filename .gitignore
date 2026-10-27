@@ -1,0 +1,16 @@
+# Pakker – installeres med npm install, skal ikke i git
+node_modules/
+
+# Byggede filer
+dist/
+dev-dist/
+
+# Hemmeligheder – må aldrig i git
+.env
+.env.*
+!.env.example
+
+# Støj fra systemet og editoren
+.DS_Store
+*.log
+coverage/
