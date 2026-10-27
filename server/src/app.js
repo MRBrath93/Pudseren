@@ -6,6 +6,7 @@ import { ZodError } from 'zod';
 import { requireJson } from './middleware/auth.js';
 import { authRouter } from './routes/auth.js';
 import { twoFactorRouter } from './routes/twoFactor.js';
+import { customersRouter } from './routes/customers.js';
 import { createEncryption } from './lib/encryption.js';
 
 // Opretter selve Express-appen. Den er adskilt fra index.js,
@@ -66,6 +67,7 @@ export function createApp({ pool, config, loginLimit, codeLimit, pruneSessions =
   // så auth-routeren skal før to-faktor-routeren, der kræver login.
   app.use('/api/auth', authRouter({ pool, encryption, loginLimit, codeLimit }));
   app.use('/api/auth/2fa', twoFactorRouter({ pool, encryption, codeLimit }));
+  app.use('/api/customers', customersRouter({ pool, encryption }));
 
   app.use('/api', (req, res) => {
     res.status(404).json({ error: 'Findes ikke.' });
