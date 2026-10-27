@@ -12,7 +12,7 @@
       "label": "Tunnel",
       "detail": "SSH-tunnel til udviklingsdatabasen på serveren (port 5433)",
       "type": "shell",
-      "command": "npm run db:tunnel",
+      "command": "while true; do npm run db:tunnel; echo \"Tunnelen lukkede. Prøver igen om 3 sekunder …\"; sleep 3; done",
       "isBackground": true,
       "problemMatcher": [],
       "icon": { "id": "database", "color": "terminal.ansiYellow" },
