@@ -1,0 +1,60 @@
+{
+  // Faste terminaler til projektet. Startes automatisk, når mappen åbnes i VS Code,
+  // eller manuelt med Cmd+Shift+P → "Tasks: Run Task" → "Start udvikling".
+  "version": "2.0.0",
+  // Kør opgaverne i samme slags shell som en almindelig terminal (læser ~/.zshrc),
+  // så de bruger den samme Node-version som når du selv skriver kommandoerne.
+  "options": {
+    "shell": { "executable": "/bin/zsh", "args": ["-l", "-i", "-c"] }
+  },
+  "tasks": [
+    {
+      "label": "Tunnel",
+      "detail": "SSH-tunnel til udviklingsdatabasen på serveren (port 5433)",
+      "type": "shell",
+      "command": "npm run db:tunnel",
+      "isBackground": true,
+      "problemMatcher": [],
+      "icon": { "id": "database", "color": "terminal.ansiYellow" },
+      "presentation": { "panel": "dedicated", "reveal": "silent", "group": "udvikling" }
+    },
+    {
+      "label": "Server",
+      "detail": "Express-API på http://localhost:3000",
+      "type": "shell",
+      "command": "npm run dev:server",
+      "isBackground": true,
+      "problemMatcher": [],
+      "icon": { "id": "server", "color": "terminal.ansiGreen" },
+      "presentation": { "panel": "dedicated", "reveal": "always", "group": "udvikling" }
+    },
+    {
+      "label": "SSH server",
+      "detail": "Logget ind på produktionsserveren (ssh pudseren). Pas på – det er den rigtige server.",
+      "type": "shell",
+      "command": "ssh pudseren",
+      "isBackground": true,
+      "problemMatcher": [],
+      "icon": { "id": "remote", "color": "terminal.ansiRed" },
+      "presentation": { "panel": "dedicated", "reveal": "always", "focus": true }
+    },
+    {
+      "label": "Git",
+      "detail": "Almindelig terminal på din Mac til git og npm. Viser git status, når den åbner.",
+      "type": "shell",
+      "command": "git status; exec $SHELL -l",
+      "isBackground": true,
+      "problemMatcher": [],
+      "icon": { "id": "git-commit", "color": "terminal.ansiMagenta" },
+      "presentation": { "panel": "dedicated", "reveal": "always", "focus": true }
+    },
+    {
+      "label": "Start udvikling",
+      "detail": "Starter tunnel, server, git-terminal og SSH til serveren",
+      "dependsOn": ["Tunnel", "Server", "SSH server", "Git"],
+      "problemMatcher": [],
+      "icon": { "id": "rocket", "color": "terminal.ansiBlue" },
+      "runOptions": { "runOn": "folderOpen" }
+    }
+  ]
+}
