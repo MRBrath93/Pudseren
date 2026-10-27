@@ -16,11 +16,18 @@ export async function migrate(pool) {
     )`);
 
   const { rows } = await pool.query('SELECT name FROM schema_migrations');
-  const applied = new Set(rows.map((row) => row.name));
+  const applied = new Set();
+  for (const row of rows) {
+    applied.add(row.name);
+  }
 
-  const files = (await fs.readdir(migrationsDir)).filter((file) => file.endsWith('.sql')).sort();
+  const files = [];
+  for (const file of await fs.readdir(migrationsDir)) {
+    if (file.endsWith('.sql')) files.push(file);
+  }
+  files.sort();
+
   const ran = [];
-
   for (const file of files) {
     if (applied.has(file)) continue;
 
