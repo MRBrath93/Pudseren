@@ -86,6 +86,7 @@ export function twoFactorRouter({ pool, encryption, codeLimit = 10 }) {
     }
 
     delete req.session.pendingTotpSecret;
+    req.session.user.twoFactor = true;
     await save(req.session);
 
     // Gendannelseskoderne vises kun denne ene gang. Bagefter findes de kun som hash.

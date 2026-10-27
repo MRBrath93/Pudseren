@@ -40,7 +40,7 @@ describe.skipIf(!databaseUrl)('login', () => {
   it('logger ind med rigtig e-mail og adgangskode', async () => {
     const res = await request(app).post('/api/auth/login').send({ email: 'chef@test.dk', password: PASSWORD });
     expect(res.status).toBe(200);
-    expect(res.body.user).toEqual({ id: 1, name: 'Chef', email: 'chef@test.dk', role: 'chef' });
+    expect(res.body.user).toEqual({ id: 1, name: 'Chef', email: 'chef@test.dk', role: 'chef', twoFactor: false });
   });
 
   it('sender aldrig hashen med i svaret', async () => {

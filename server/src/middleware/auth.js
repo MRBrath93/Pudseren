@@ -5,10 +5,18 @@ export function requireAuth(req, res, next) {
 }
 
 // Kræver en bestemt rolle, fx requireRole('chef').
+// Chefen kan se alle kunder og nøglekoder, så han skal have to-faktor slået til,
+// før han får adgang. Medarbejderen kan vælge det til.
 export function requireRole(...roles) {
   return (req, res, next) => {
     const user = req.session.user;
-    if (user && roles.includes(user.role)) return next();
+    // Det mest sandsynlige først: en logget ind bruger med den rigtige rolle.
+    if (user && roles.includes(user.role)) {
+      if (user.role === 'chef' && !user.twoFactor) {
+        return res.status(403).json({ error: 'Slå to-faktor til først.', code: 'TWO_FACTOR_SETUP_REQUIRED' });
+      }
+      return next();
+    }
     if (!user) return res.status(401).json({ error: 'Du skal være logget ind.' });
     res.status(403).json({ error: 'Du har ikke adgang til dette.' });
   };

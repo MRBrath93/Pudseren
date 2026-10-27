@@ -105,3 +105,90 @@ describe.skipIf(!databaseUrl)('opsætning af to-faktor', () => {
     await agent.post('/api/auth/2fa/enable').send({ code: '123456' }).expect(400);
   });
 });
+
+describe.skipIf(!databaseUrl)('login med to-faktor', () => {
+  let pool;
+  let app;
+  let secret;
+  let recoveryCodes;
+
+  beforeAll(async () => {
+    pool = createPool(databaseUrl);
+    await migrate(pool);
+    app = createApp({ pool, config, loginLimit: 1000, codeLimit: 1000, pruneSessions: false });
+  });
+
+  afterAll(async () => {
+    await pool?.end();
+  });
+
+  // Hver test starter med en chef, der allerede har slået to-faktor til.
+  beforeEach(async () => {
+    await pool.query('TRUNCATE users, "session" RESTART IDENTITY CASCADE');
+    await pool.query(
+      `INSERT INTO users (name, email, password_hash, role) VALUES ('Chef', 'chef@test.dk', $1, 'chef')`,
+      [await hashPassword(PASSWORD)],
+    );
+    const agent = request.agent(app);
+    await agent.post('/api/auth/login').send({ email: 'chef@test.dk', password: PASSWORD }).expect(200);
+    const setup = await agent.post('/api/auth/2fa/setup').send({}).expect(200);
+    secret = setup.body.secret;
+    const enable = await agent.post('/api/auth/2fa/enable').send({ code: totp(secret) }).expect(200);
+    recoveryCodes = enable.body.recoveryCodes;
+    // Glem det tidsrum, opsætningen brugte, så testene kan bruge den aktuelle kode.
+    await pool.query('UPDATE users SET totp_last_step = NULL');
+    await pool.query('TRUNCATE "session"');
+  });
+
+  async function firstStep() {
+    const agent = request.agent(app);
+    const res = await agent.post('/api/auth/login').send({ email: 'chef@test.dk', password: PASSWORD }).expect(200);
+    expect(res.body).toEqual({ twoFactorRequired: true });
+    return agent;
+  }
+
+  it('logger ikke ind på adgangskoden alene', async () => {
+    const agent = await firstStep();
+    await agent.get('/api/auth/me').expect(401);
+  });
+
+  it('logger ind med adgangskode og kode fra appen', async () => {
+    const agent = await firstStep();
+    const res = await agent.post('/api/auth/2fa/verify').send({ code: totp(secret) }).expect(200);
+    expect(res.body.user.twoFactor).toBe(true);
+    await agent.get('/api/auth/me').expect(200);
+  });
+
+  it('afviser en forkert kode', async () => {
+    const agent = await firstStep();
+    await agent.post('/api/auth/2fa/verify').send({ code: '000000' }).expect(400);
+    await agent.get('/api/auth/me').expect(401);
+  });
+
+  it('afviser den samme kode anden gang (replay)', async () => {
+    const code = totp(secret);
+    const first = await firstStep();
+    await first.post('/api/auth/2fa/verify').send({ code }).expect(200);
+    const second = await firstStep();
+    await second.post('/api/auth/2fa/verify').send({ code }).expect(400);
+  });
+
+  it('kræver adgangskoden først', async () => {
+    await request(app).post('/api/auth/2fa/verify').send({ code: totp(secret) }).expect(401);
+  });
+
+  it('kan bruge en gendannelseskode – men kun én gang', async () => {
+    const first = await firstStep();
+    const res = await first.post('/api/auth/2fa/verify').send({ recoveryCode: recoveryCodes[0] }).expect(200);
+    expect(res.body.usedRecoveryCode).toBe(true);
+
+    const second = await firstStep();
+    await second.post('/api/auth/2fa/verify').send({ recoveryCode: recoveryCodes[0] }).expect(400);
+  });
+
+  it('accepterer gendannelseskoden uden bindestreg og med store bogstaver', async () => {
+    const agent = await firstStep();
+    const typed = recoveryCodes[1].replace('-', '').toUpperCase();
+    await agent.post('/api/auth/2fa/verify').send({ recoveryCode: typed }).expect(200);
+  });
+});
