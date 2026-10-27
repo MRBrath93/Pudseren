@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev:server": "npm run dev --workspace server",
-    "db:tunnel": "ssh -N -L 5433:localhost:5432 pudseren",
+    "db:tunnel": "ssh -N -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -L 5433:localhost:5432 pudseren",
     "db:migrate": "npm run db:migrate --workspace server"
   },
   "engines": {
