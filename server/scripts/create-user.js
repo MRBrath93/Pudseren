@@ -3,7 +3,7 @@
 import readline from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { createPool } from '../src/db.js';
-import { hashPassword, MIN_PASSWORD_LENGTH } from '../src/lib/password.js';
+import { hashPassword, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from '../src/lib/password.js';
 
 const ROLES = ['medarbejder', 'chef'];
 
@@ -65,6 +65,7 @@ try {
   if (!name || !email.includes('@')) throw new Error('Navn og en gyldig e-mail skal udfyldes.');
   if (!ROLES.includes(role)) throw new Error(`Rollen skal være ${ROLES.join(' eller ')}.`);
   if (password.length < MIN_PASSWORD_LENGTH) throw new Error(`Adgangskoden skal være mindst ${MIN_PASSWORD_LENGTH} tegn.`);
+  if (password.length > MAX_PASSWORD_LENGTH) throw new Error(`Adgangskoden må højst være ${MAX_PASSWORD_LENGTH} tegn.`);
   if (password !== repeat) throw new Error('De to adgangskoder er ikke ens.');
 
   const passwordHash = await hashPassword(password);

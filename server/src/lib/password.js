@@ -7,6 +7,10 @@ import argon2 from 'argon2';
 
 export const MIN_PASSWORD_LENGTH = 12;
 
+// argon2 er bevidst tung. Uden en øvre grænse kunne nogen sende en adgangskode
+// på flere megabyte og få serveren til at bruge al sin kraft på at hashe den.
+export const MAX_PASSWORD_LENGTH = 128;
+
 export function hashPassword(password) {
   return argon2.hash(password, { type: argon2.argon2id });
 }
