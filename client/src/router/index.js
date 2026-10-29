@@ -10,7 +10,7 @@ const routes = [
   {
     // Chefens sider deler navigationsrail'en i ChefLayout.
     path: '/',
-    component: () => import('../components/ChefLayout.vue'),
+    component: () => import('../components/templates/ChefLayout.vue'),
     meta: { roles: ['chef'] },
     children: [
       { path: '', redirect: '/skal-pudses' },

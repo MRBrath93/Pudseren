@@ -1,9 +1,11 @@
 <script setup>
+// Organisme: chefens hovedmenu (Navigationsrail i Figma).
+// Bliver til en bundmenu på små skærme.
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuth } from '../composables/useAuth.js';
+import { useAuth } from '../../composables/useAuth.js';
 import { BookUser, ClipboardList, LogOut, Route, Users } from '@lucide/vue';
-import AppLogo from './AppLogo.vue';
+import AppLogo from '../atoms/AppLogo.vue';
 
 const auth = useAuth();
 const router = useRouter();
@@ -32,34 +34,23 @@ async function logout() {
 </script>
 
 <template>
-  <div class="layout">
-    <nav class="rail" aria-label="Hovedmenu">
-      <RouterLink to="/skal-pudses" class="logo"><AppLogo :height="20" /></RouterLink>
-      <RouterLink v-for="link in links" :key="link.to" :to="link.to" class="item">
-        <span class="pill"><component :is="link.icon" :size="22" aria-hidden="true" /></span>
-        <span class="label">{{ link.label }}</span>
-      </RouterLink>
-      <div class="account">
-        <span class="avatar" :title="auth.user.value?.name">{{ initials }}</span>
-        <button class="item logout" type="button" @click="logout">
-          <span class="pill"><LogOut :size="22" aria-hidden="true" /></span>
-          <span class="label">Log ud</span>
-        </button>
-      </div>
-    </nav>
-    <main class="content">
-      <RouterView />
-    </main>
-  </div>
+  <nav class="rail" aria-label="Hovedmenu">
+    <RouterLink to="/skal-pudses" class="logo"><AppLogo :height="20" /></RouterLink>
+    <RouterLink v-for="link in links" :key="link.to" :to="link.to" class="item">
+      <span class="pill"><component :is="link.icon" :size="22" aria-hidden="true" /></span>
+      <span class="label">{{ link.label }}</span>
+    </RouterLink>
+    <div class="account">
+      <span class="avatar" :title="auth.user.value?.name">{{ initials }}</span>
+      <button class="item logout" type="button" @click="logout">
+        <span class="pill"><LogOut :size="22" aria-hidden="true" /></span>
+        <span class="label">Log ud</span>
+      </button>
+    </div>
+  </nav>
 </template>
 
 <style scoped>
-.layout {
-  display: grid;
-  grid-template-columns: 96px 1fr;
-  min-height: 100dvh;
-}
-
 .rail {
   position: sticky;
   top: 0;
@@ -140,11 +131,6 @@ async function logout() {
 
 /* På små skærme bliver rail'en til en bundmenu. */
 @media (max-width: 700px) {
-  .layout {
-    grid-template-columns: 1fr;
-    padding-bottom: 80px;
-  }
-
   .rail {
     position: fixed;
     inset: auto 0 0;

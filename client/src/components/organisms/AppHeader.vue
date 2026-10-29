@@ -1,6 +1,6 @@
 <script setup>
 import { useRouter } from 'vue-router';
-import { useAuth } from '../composables/useAuth.js';
+import { useAuth } from '../../composables/useAuth.js';
 
 const auth = useAuth();
 const router = useRouter();
