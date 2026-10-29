@@ -3,10 +3,23 @@ import { useAuth } from '../composables/useAuth.js';
 
 // Siderne indlæses først, når de bruges (lazy loading), så medarbejderens telefon
 // ikke henter chefens sider og omvendt.
+const ComingSoon = () => import('../views/ComingSoonView.vue');
+
 const routes = [
   { path: '/login', component: () => import('../views/LoginView.vue'), meta: { guest: true } },
-  { path: '/', component: { render: () => null } },
-  { path: '/skal-pudses', component: () => import('../views/ChefHomeView.vue'), meta: { roles: ['chef'] } },
+  {
+    // Chefens sider deler navigationsrail'en i ChefLayout.
+    path: '/',
+    component: () => import('../components/ChefLayout.vue'),
+    meta: { roles: ['chef'] },
+    children: [
+      { path: '', redirect: '/skal-pudses' },
+      { path: 'skal-pudses', component: () => import('../views/ChefHomeView.vue') },
+      { path: 'ruter', component: ComingSoon, props: { title: 'Ruter' } },
+      { path: 'kunder', component: ComingSoon, props: { title: 'Kunder' } },
+      { path: 'hold', component: ComingSoon, props: { title: 'Hold' } },
+    ],
+  },
   { path: '/dagens-rute', component: () => import('../views/WorkerHomeView.vue'), meta: { roles: ['medarbejder'] } },
   { path: '/to-faktor', component: () => import('../views/TwoFactorSetupView.vue'), meta: { roles: ['chef', 'medarbejder'] } },
   { path: '/:pathMatch(.*)*', redirect: '/' },
