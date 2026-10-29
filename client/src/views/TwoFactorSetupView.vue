@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import AppHeader from '../components/AppHeader.vue';
+import AppHeader from '../components/organisms/AppHeader.vue';
 import { api } from '../api.js';
 import { useAuth } from '../composables/useAuth.js';
 
