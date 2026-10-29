@@ -12,6 +12,7 @@
     "dev:client": "npm run dev --workspace client",
     "db:tunnel": "ssh -N -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -L 5433:localhost:5432 pudseren",
     "db:migrate": "npm run db:migrate --workspace server",
+    "db:seed": "npm run db:seed --workspace server",
     "user:create": "npm run user:create --workspace server",
     "test": "npm test --workspace server",
     "test:watch": "npm run test:watch --workspace server",
