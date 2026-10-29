@@ -1,20 +1,25 @@
 <script setup>
+// Side: login i op til to trin, adgangskode og derefter kode fra appen, hvis brugeren har to-faktor.
 import { nextTick, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { Eye, EyeOff } from '@lucide/vue';
 import { useAuth } from '../composables/useAuth.js';
+import AppButton from '../components/atoms/AppButton.vue';
+import TextField from '../components/molecules/TextField.vue';
+import AuthLayout from '../components/templates/AuthLayout.vue';
 
 const auth = useAuth();
 const router = useRouter();
 
-// Login sker i op til to trin: adgangskode, og derefter kode fra appen, hvis brugeren har to-faktor.
 const step = ref('password');
 const email = ref('');
 const password = ref('');
+const showPassword = ref(false);
 const code = ref('');
 const useRecoveryCode = ref(false);
 const error = ref('');
 const busy = ref(false);
-const codeInput = ref(null);
+const codeField = ref(null);
 
 async function submitPassword() {
   error.value = '';
@@ -25,7 +30,7 @@ async function submitPassword() {
     if (!needsCode) return router.replace(auth.homeRoute.value);
     step.value = 'code';
     await nextTick();
-    codeInput.value?.focus();
+    codeField.value?.focus();
   } catch (e) {
     error.value = e.message;
   } finally {
@@ -58,82 +63,125 @@ function toggleRecovery() {
 </script>
 
 <template>
-  <main class="login">
-    <form v-if="step === 'password'" class="card" novalidate @submit.prevent="submitPassword">
-      <h1>Log ind</h1>
+  <AuthLayout v-if="step === 'password'">
+    <template #title>Log<br />ind.</template>
 
-      <div class="field">
-        <label for="email">E-mail</label>
-        <input id="email" v-model="email" type="email" autocomplete="username" inputmode="email" required />
-      </div>
-
-      <div class="field">
-        <label for="password">Adgangskode</label>
-        <input id="password" v-model="password" type="password" autocomplete="current-password" required />
-      </div>
+    <form class="form" novalidate @submit.prevent="submitPassword">
+      <TextField
+        id="email"
+        v-model="email"
+        label="E-mail"
+        type="email"
+        autocomplete="username"
+        inputmode="email"
+      />
+      <TextField
+        id="password"
+        v-model="password"
+        label="Adgangskode"
+        :type="showPassword ? 'text' : 'password'"
+        autocomplete="current-password"
+      >
+        <template #trailing>
+          <button
+            type="button"
+            class="icon-button"
+            :aria-label="showPassword ? 'Skjul adgangskode' : 'Vis adgangskode'"
+            :aria-pressed="showPassword"
+            @click="showPassword = !showPassword"
+          >
+            <EyeOff v-if="showPassword" :size="22" aria-hidden="true" />
+            <Eye v-else :size="22" aria-hidden="true" />
+          </button>
+        </template>
+      </TextField>
 
       <p v-if="error" class="error" role="alert">{{ error }}</p>
 
-      <button class="btn btn-primary" type="submit" :disabled="busy || !email || !password">
+      <AppButton type="submit" size="large" :disabled="busy || !email || !password">
         {{ busy ? 'Logger ind …' : 'Log ind' }}
-      </button>
+      </AppButton>
     </form>
+  </AuthLayout>
 
-    <form v-else class="card" novalidate @submit.prevent="submitCode">
-      <h1>{{ useRecoveryCode ? 'Gendannelseskode' : 'Kode fra appen' }}</h1>
-      <p class="muted">
+  <AuthLayout v-else>
+    <template #title>Kode.</template>
+
+    <form class="form" novalidate @submit.prevent="submitCode">
+      <p class="muted lead">
         {{ useRecoveryCode
           ? 'Skriv en af de gendannelseskoder, du gemte, da du slog to-faktor til.'
           : 'Åbn din authenticator-app, og skriv den 6-cifrede kode for Pudseren.' }}
       </p>
 
-      <div class="field">
-        <label for="code">{{ useRecoveryCode ? 'Gendannelseskode' : 'Kode' }}</label>
-        <input
-          id="code"
-          ref="codeInput"
-          v-model="code"
-          :inputmode="useRecoveryCode ? 'text' : 'numeric'"
-          :autocomplete="useRecoveryCode ? 'off' : 'one-time-code'"
-          :maxlength="useRecoveryCode ? 20 : 6"
-          required
-        />
-      </div>
+      <TextField
+        id="code"
+        v-model="code"
+        ref="codeField"
+        :label="useRecoveryCode ? 'Gendannelseskode' : 'Kode'"
+        :inputmode="useRecoveryCode ? 'text' : 'numeric'"
+        :autocomplete="useRecoveryCode ? 'off' : 'one-time-code'"
+        :maxlength="useRecoveryCode ? 20 : 6"
+      />
 
       <p v-if="error" class="error" role="alert">{{ error }}</p>
 
-      <button class="btn btn-primary" type="submit" :disabled="busy || !code">
+      <AppButton type="submit" size="large" :disabled="busy || !code">
         {{ busy ? 'Tjekker …' : 'Fortsæt' }}
-      </button>
+      </AppButton>
+
       <button class="link" type="button" @click="toggleRecovery">
         {{ useRecoveryCode ? 'Brug koden fra appen' : 'Har du mistet telefonen? Brug en gendannelseskode' }}
       </button>
+
+      <p class="muted small">
+        Koden skifter hvert 30. sekund. Du har 5 minutter, før du skal skrive adgangskoden igen.
+      </p>
     </form>
-  </main>
+  </AuthLayout>
 </template>
 
 <style scoped>
-.login {
-  min-height: 100dvh;
+.form {
   display: grid;
-  place-items: center;
-  padding: 24px;
+  gap: 24px;
 }
 
-.card {
-  width: min(400px, 100%);
+.lead {
+  margin: 0;
+}
+
+.icon-button {
   display: grid;
-  gap: 20px;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: 6px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: var(--soft);
 }
 
 .link {
-  background: none;
-  border: none;
-  padding: 0;
-  font: inherit;
-  color: var(--accent);
-  text-decoration: underline;
-  cursor: pointer;
   justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.small {
+  margin: 0;
+  font-size: 0.8125rem;
 }
 </style>
