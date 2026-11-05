@@ -82,8 +82,8 @@ export async function seed(pool, encryption) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    // CASCADE fjerner også loggen over viste nøglekoder for de slettede kunder.
-    await client.query('TRUNCATE customers RESTART IDENTITY CASCADE');
+    // Loggene tømmes også, da kundernes id'er starter forfra og ellers ville pege på de nye testkunder.
+    await client.query('TRUNCATE customers, customer_changes, key_code_views RESTART IDENTITY');
 
     for (let i = 0; i < CUSTOMERS.length; i++) {
       const c = CUSTOMERS[i];

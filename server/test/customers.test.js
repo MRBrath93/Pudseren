@@ -133,14 +133,14 @@ describe.skipIf(!databaseUrl)('kunder', () => {
     expect(res.body.customer.has_key_code).toBe(false);
   });
 
-  it('sletter en kunde helt, også loggen over nøglekoden', async () => {
+  it('sletter kunden, men beholder loggen over, hvem der har set nøglekoden', async () => {
     const agent = await loginAs(app, chef);
     const { body } = await agent.post('/api/customers').send(customer).expect(201);
     await agent.get(`/api/customers/${body.customer.id}/key-code`).expect(200);
     await agent.delete(`/api/customers/${body.customer.id}`).expect(204);
 
     const left = await pool.query('SELECT (SELECT count(*) FROM customers) AS c, (SELECT count(*) FROM key_code_views) AS v');
-    expect(left.rows[0]).toEqual({ c: '0', v: '0' });
+    expect(left.rows[0]).toEqual({ c: '0', v: '1' });
   });
 
   it('svarer 404 for en kunde, der ikke findes', async () => {
